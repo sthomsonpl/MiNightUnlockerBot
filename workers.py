@@ -309,14 +309,15 @@ async def auto_unlock(user_id: int, user_data: dict, bot):
         await send_status(f"Best Xiaomi server: {best_server} with avg ping {best_ping} ms.")
         await send_status(f"Offsetting unlock time by {offset_seconds:.3f} seconds for ping compensation.")
 
-        # Czekamy do dokładnego czasu 00:00 + offset
+        # Obliczamy dokładny czas do 00:00 + offset
         now_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
         now_china = now_utc.astimezone(tz_china)
-        seconds_until_midnight = (midnight_china - now_china).total_seconds()
+        target_time = midnight_china + timedelta(seconds=offset_seconds)
+        time_until_target = (target_time - now_china).total_seconds()
 
-        wait_seconds = seconds_until_midnight + offset_seconds - 60  # 60 sekund bo ping był minutę przed
-        if wait_seconds > 0:
-            await asyncio.sleep(wait_seconds)
+        if time_until_target > 0:
+            await send_status(f"Waiting {time_until_target:.2f} seconds until exact unlock time (00:00)...")
+            await asyncio.sleep(time_until_target)
         else:
             await send_status("Unlock time passed, sending immediately.")
 

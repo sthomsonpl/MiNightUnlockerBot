@@ -47,3 +47,9 @@ ACCESS_CODE=optional_code_for_user_verification
 ```
 ℹ️  ___When starting the bot, you will be prompted to enter the encryption key each time.  
 Make sure to keep this key secure and accessible, as it is required for the bot to access encrypted data.___
+
+
+
+
+
+

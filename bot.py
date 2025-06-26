@@ -35,15 +35,15 @@ if not BOT_TOKEN or not ACCESS_CODE:
 
 def get_encryption_key():
     while True:
-        key_b64 = input("Podaj klucz szyfrowania (base64, 32 bajty po dekodowaniu): ").strip()
+        key_b64 = input("Enter the encryption key (base64, 32 bytes after decoding):  ").strip()
         try:
             key = base64.urlsafe_b64decode(key_b64)
             if len(key) != 32:
-                print("Błąd: klucz musi mieć 32 bajty po dekodowaniu base64.")
+                print("Error: the key must be 32 bytes after base64 decoding.")
                 continue
             return base64.urlsafe_b64encode(key)
         except Exception:
-            print("Błąd dekodowania base64, spróbuj ponownie.")
+            print("Base64 decoding error, please try again.")
 
 FERNET_KEY = get_encryption_key()
 fernet = Fernet(FERNET_KEY)

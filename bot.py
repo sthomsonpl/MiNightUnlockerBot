@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 import asyncio
 from datetime import datetime, timedelta
 import pytz
-
+import shutil
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, ContextTypes,
@@ -52,7 +52,7 @@ fernet = Fernet(FERNET_KEY)
 SETUP_LOGIN, SETUP_PASSWORD = range(2)
 
 def user_dir_path(user_id):
-    return os.path.join(DATA_DIR, str(user_id))
+    return os.path.join(DATA_DIR, f"{user_id}")
 
 def is_user_authorized(user_id):
     return os.path.isdir(user_dir_path(user_id))
@@ -344,6 +344,47 @@ async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(msg)
 
+#Usuwanie danych
+async def clear_user_data(user_id):
+    if is_auto_unlock_running(user_id):
+        stop_auto_unlock(user_id)
+
+    path = user_dir_path(user_id)
+    if os.path.exists(path) and os.path.isdir(path):
+        try:
+            shutil.rmtree(path)
+            print(f"Usunięto folder użytkownika {user_id}: {path}")
+            return True
+        except Exception as e:
+            print(f"Błąd przy usuwaniu folderu {path}: {e}")
+            return False
+    else:
+        print(f"Folder użytkownika {user_id} nie istnieje: {path}")
+    return False
+
+async def clear_data_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    if not is_user_authorized(user_id):
+        await send_text(update,
+            "Nie jesteś autoryzowany.",
+            "You are not authorized."
+        )
+        return
+
+    success = await clear_user_data(user_id)
+    if success:
+        await send_text(update,
+            "Twoje dane zostały usunięte. Auto unlock zatrzymany jeśli był aktywny.",
+            "Your data has been deleted. Auto unlock stopped if it was active."
+        )
+    else:
+        await send_text(update,
+            "Nie znaleziono Twoich danych do usunięcia.",
+            "No data found to delete."
+        )
+
+
 # --- /help ---
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_text(update,
@@ -354,6 +395,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/auto_unlock_start - uruchom auto unlock\n"
         "/auto_unlock_stop - zatrzymaj auto unlock\n"
         "/test - przetestuj pobieranie tokenów\n"
+        "/clear_data - usuń wszystkie Twoje dane i zatrzymaj auto unlock\n"
         "/help - pomoc\n"
         "/cancel - anuluj aktualną operację (np. /setup)",
         "/start - start\n"
@@ -363,6 +405,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/auto_unlock_start - start auto unlock\n"
         "/auto_unlock_stop - stop auto unlock\n"
         "/test - test fetching tokens\n"
+        "/clear_data - delete all your data and stop auto unlock\n"
         "/help - help\n"
         "/cancel - cancel current operation (e.g. /setup)"
     )
@@ -461,6 +504,7 @@ async def main():
     app.add_handler(CommandHandler("auto_unlock_stop", auto_unlock_stop))
 
     app.add_handler(CommandHandler("test", test_command))
+    app.add_handler(CommandHandler("clear_data", clear_data_command))
 
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("cancel", cancel))

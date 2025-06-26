@@ -37,7 +37,7 @@ def get_encryption_key():
     while True:
         key_b64 = input("Podaj klucz szyfrowania (base64, 32 bajty po dekodowaniu): ").strip()
         try:
-            key = base64.b64decode(key_b64)
+            key = base64.urlsafe_b64decode(key_b64)
             if len(key) != 32:
                 print("Błąd: klucz musi mieć 32 bajty po dekodowaniu base64.")
                 continue

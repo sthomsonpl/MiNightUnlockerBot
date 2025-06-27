@@ -40,6 +40,10 @@ BOT_TOKEN=your_telegram_bot_token
 ACCESS_CODE=optional_code_for_user_verification
 ```
 
+💡 Optional:
+If you set ACCESS_CODE=RANDOM in your .env file, the bot will generate a random 8-character access code on startup and display it in the console.
+Make sure to check the console output to get the generated code for user authorization.
+
 
 🚀Start the bot:
 ```

@@ -7,11 +7,19 @@ import asyncio
 from datetime import datetime, timedelta
 import pytz
 import shutil
+import random
+import string
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, ContextTypes,
     MessageHandler, filters, ConversationHandler
 )
+
+def generate_random_accesscode(length=8):
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+    print(f"[ACCESS CODE] Generated random access code: {code}")
+    return code
+
 
 from workers import (
     manual_unlock,
@@ -29,9 +37,13 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ACCESS_CODE = os.getenv("ACCESS_CODE")
 
+if ACCESS_CODE== "RANDOM":
+    ACCESS_CODE = generate_random_accesscode()
 if not BOT_TOKEN or not ACCESS_CODE:
     print("Set BOT_TOKEN and ACCESS_CODE in your .env file!")
     exit(1)
+
+
 
 def get_encryption_key():
     while True:

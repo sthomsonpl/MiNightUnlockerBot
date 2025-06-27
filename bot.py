@@ -64,9 +64,9 @@ def create_user_folder(user_id):
 def credentials_path(user_id):
     return os.path.join(user_dir_path(user_id), "credentials.json")
 
-def save_credentials(user_id, login, password_encrypted):
+def save_credentials(user_id, login_encrypted, password_encrypted):
     data = {
-        "email": login,
+        "email": login_encrypted.decode(),
         "password": password_encrypted.decode()
     }
     with open(credentials_path(user_id), "w", encoding="utf-8") as f:
@@ -76,10 +76,12 @@ def load_credentials(user_id):
     try:
         with open(credentials_path(user_id), "r", encoding="utf-8") as f:
             data = json.load(f)
+            login_encrypted = data.get("email", "").encode()
             pwd_encrypted = data.get("password", "").encode()
+            login = fernet.decrypt(login_encrypted).decode()
             password = fernet.decrypt(pwd_encrypted).decode()
             return {
-                "email": data.get("email"),
+                "email": login,
                 "password": password
             }
     except Exception:
@@ -169,8 +171,9 @@ async def setup_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login = context.user_data.get('setup_login')
     user_id = update.effective_user.id
 
+    login_encrypted = fernet.encrypt(login.encode())
     password_encrypted = fernet.encrypt(password.encode())
-    save_credentials(user_id, login, password_encrypted)
+    save_credentials(user_id, login_encrypted, password_encrypted)
     try:
         await update.message.delete()
     except:
